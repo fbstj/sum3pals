@@ -7,12 +7,6 @@ const BASE: u8 = 10;
 // storage type for each digit (must fit BASE)
 type Digit = u8;
 
-#[derive(Debug)]
-struct Digits {
-	digs: Vec<Digit>,
-	base: Digit,
-}
-
 /// classification of numbers from Section 2.1 & 2.2
 #[derive(Debug, PartialOrd, Ord, PartialEq, Eq)]
 enum Class {
@@ -89,8 +83,15 @@ enum Class {
 	/// - lesat-sig is 3
 	TypeB7,
 }
-impl Digits {
-	fn from(mut num: u128, base: Digit) -> Digits {
+
+#[derive(Debug)]
+struct Number {
+	digs: Vec<Digit>,
+	base: Digit,
+}
+
+impl Number {
+	fn from(mut num: u128, base: Digit) -> Number {
 		let b : u128 = base as u128;
 		let mut digits : Vec<u8> = vec![];
 
@@ -102,7 +103,7 @@ impl Digits {
 		digits.push(num as u8);
 		digits.reverse();
 
-		Digits { digs: digits, base }
+		Number { digs: digits, base }
 	}
 
 	/// fetch the nth most significant digit
@@ -186,6 +187,16 @@ impl Digits {
 					m1, m2, m3, l1);
 		}
 	}
+
+	/// numbers are special if the length is even and one of the middle digits is 0
+	/// as defined in Definition 2.1 (Section 2.3)
+	fn is_special(&self) -> bool {
+		let l = self.digs.len();
+		// odd length numbers and small numbers are not special
+		if l % 2 != 0 || l < 7 { return false; }
+		let m = l / 2;
+		self.most_sig(m as usize) == 0 || self.least_sig(m as usize) == 0
+	}
 }
 
 fn main() {
@@ -193,16 +204,16 @@ fn main() {
 				.expect("Please provide number to decompose into palindromes");
 	let num : u128 = arg.parse()
 				.expect("Please provide positive number to decompose into palindromes");
-	let digits = Digits::from(num, BASE);
+	let digits = Number::from(num, BASE);
     println!("{:?}", digits);
-    println!("{:?}", digits.classify());
+    println!("Type: {:?}, special?: {}", digits.classify(), digits.is_special());
 }
 
 #[test]
 fn test_classify_cover() {
 	const X : u128 = 1_000_000;
 	for n in 0 .. 100*X {
-		let digits = Digits::from(n, BASE);
+		let digits = Number::from(n, BASE);
 		let covers = digits.classify();
 		if n < X { assert!(covers == Class::Small, "not Small: {} ", digits.as_u128()); }
 		if n % X == 0 {
