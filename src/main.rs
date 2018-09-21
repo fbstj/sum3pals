@@ -126,9 +126,10 @@ impl Number {
 			.sum()
 	}
 
-	fn classify(&self) -> Class {
-		if self.digs.len() < 7 {
-			return Class::Small;
+	fn classify(&self) -> (Class, impl Palindrome, impl Palindrome, impl Palindrome) {
+		let len = self.digs.len();
+		if len < 7 {
+			return ( Class::Small, Pal::new(0, self.base), Pal::new(0, self.base), Pal::new(0, self.base) );
 		}
 		// most significant 3 digits
 		let m1 = self.most_sig(1);
@@ -142,50 +143,163 @@ impl Number {
 		let d_l1_m1_2 = ((l1 as isize) - (m1 as isize) + 2) % g;
 		let d_l1_m3 = ((l1 as isize) - (m3 as isize)) % g;
 		let d_l1_3 = ((l1 as isize)- 3) % g;
+		// three palindromes
+		let mut p1 = Pal::new(len, self.base);
+		let mut p2 = Pal::new(len, self.base);
+		let mut p3 = Pal::new(len, self.base);
 		// type A numbers
+		(
 		if !(m2 == 0 || m2 == 1 || m2 == 2) && d_l1_m1_m2_1 != 0 {
+			p1.set_digit(1, m1);
+			p2.drop_digit();
+			p2.set_digit(1, m2 - 1);
+			p3.drop_digit();
+			p3.drop_digit();
+			p3.set_digit(1, d_l1_m1_m2_1 as Digit);
 			Class::TypeA1
 		} else
 		if !(m2 == 0 || m2 == 1 || m2 == 2) && d_l1_m1_m2_1 == 0 {
+			p1.set_digit(1, m1);
+			p2.drop_digit();
+			p2.set_digit(1, m2 - 2);
+			p3.drop_digit();
+			p3.drop_digit();
+			p3.set_digit(1, 1);
 			Class::TypeA2
 		} else
 		if (m2 == 0 || m2 == 1 || m2 == 2) && m1 != 1 && d_l1_m1_2 != 0 {
+			p1.set_digit(1, m1 - 1);
+			p2.drop_digit();
+			p2.set_digit(1, self.base - 1);
+			p3.drop_digit();
+			p3.drop_digit();
+			p3.set_digit(1, d_l1_m1_2 as Digit);
 			Class::TypeA3
 		} else
 		if (m2 == 0 || m2 == 1 || m2 == 2) && m1 != 1 && d_l1_m1_2 == 0 {
+			p1.set_digit(1, m1 - 1);
+			p2.drop_digit();
+			p2.set_digit(1, self.base - 2);
+			p3.drop_digit();
+			p3.drop_digit();
+			p3.set_digit(1, 1);
 			Class::TypeA4
 		} else
 		if m1 == 1 && m2 == 0 && m3 <= 3 && d_l1_m3 != 0 {
+			p1.drop_digit();
+			p1.set_digit(1, self.base - 1);
+			p2.drop_digit();
+			p2.drop_digit();
+			p2.set_digit(1, m3 + 1);
+			p3.drop_digit();
+			p3.drop_digit();
+			p3.drop_digit();
+			p3.set_digit(1, d_l1_m3 as Digit);
 			Class::TypeA5
 		} else
 		if m1 == 1 && m2 == 0 && m3 <= 2 && d_l1_m3 == 0 {
+			p1.drop_digit();
+			p1.set_digit(1, self.base - 1);
+			p2.drop_digit();
+			p2.drop_digit();
+			p2.set_digit(1, m3 + 2);
+			p3.drop_digit();
+			p3.drop_digit();
+			p3.drop_digit();
+			p3.set_digit(1, self.base - 1);
 			Class::TypeA6
 		} else
 		if m1 == 1 && m2 <= 2 && m3 >= 4 && d_l1_m3 != 0 {
+			p1.set_digit(1, 1);
+			p1.set_digit(2, m2);
+			p2.drop_digit();
+			p2.drop_digit();
+			p2.set_digit(1, m3 - 1);
+			p3.drop_digit();
+			p3.drop_digit();
+			p3.drop_digit();
+			p3.set_digit(1, d_l1_m3 as Digit);
 			Class::TypeB1
 		} else
 		if m1 == 1 && m2 <= 2 && m3 >= 3 && d_l1_m3 == 0 {
+			p1.set_digit(1, 1);
+			p1.set_digit(2, m2);
+			p2.drop_digit();
+			p2.drop_digit();
+			p2.set_digit(1, m3 - 2);
+			p3.drop_digit();
+			p3.drop_digit();
+			p3.drop_digit();
+			p3.set_digit(1, 1);
 			Class::TypeB2
 		} else
 		if m1 == 1 && (m2 == 1 || m2 == 2) && (m3 == 0 && m3 == 1) && l1 == 0 {
+			p1.set_digit(1, 1);
+			p1.set_digit(2, m2 - 1);
+			p2.drop_digit();
+			p2.drop_digit();
+			p2.set_digit(1, self.base - 2);
+			p3.drop_digit();
+			p3.drop_digit();
+			p3.drop_digit();
+			p3.set_digit(1, 1);
 			Class::TypeB3
 		} else
 		if m1 == 1 && (m2 == 1 || m2 == 2) && (m3 == 2 && m3 == 3) && l1 == 0 {
+			p1.set_digit(1, 1);
+			p1.set_digit(2, m2);
+			p2.drop_digit();
+			p2.drop_digit();
+			p2.set_digit(1, 1);
+			p3.drop_digit();
+			p3.drop_digit();
+			p3.drop_digit();
+			p3.set_digit(1, self.base - 2);
 			Class::TypeB4
 		} else
 		if m1 == 1 && (m2 == 1 || m2 == 2) && (m3 == 0 && m3 == 1 && m3 == 2) && l1 != 0 {
+			p1.set_digit(1, 1);
+			p1.set_digit(2, m2 - 1);
+			p2.drop_digit();
+			p2.drop_digit();
+			p2.set_digit(1, self.base - 1);
+			p3.drop_digit();
+			p3.drop_digit();
+			p3.drop_digit();
+			p3.set_digit(1, l1);
 			Class::TypeB5
 		} else
 		if m1 == 1 && (m2 == 1 || m2 == 2) && m3 == 3 && d_l1_3 != 0 {
+			p1.set_digit(1, 1);
+			p1.set_digit(2, m2);
+			p2.drop_digit();
+			p2.drop_digit();
+			p2.set_digit(1, 2);
+			p3.drop_digit();
+			p3.drop_digit();
+			p3.drop_digit();
+			p3.set_digit(1, d_l1_3 as Digit);
 			Class::TypeB6
 		} else
 		if m1 == 1 && (m2 == 1 || m2 == 2) && m3 == 3 && l1 == 3 {
+			p1.set_digit(1, 1);
+			p1.set_digit(2, m2);
+			p2.drop_digit();
+			p2.drop_digit();
+			p2.set_digit(1, 1);
+			p3.drop_digit();
+			p3.drop_digit();
+			p3.drop_digit();
+			p3.set_digit(1, 1);
 			Class::TypeB7
 		} else {
 			panic!("unclassified number {} (len: {}, m1: {}, m2: {}, m3: {}, l1: {})",
 					self.as_u128(), self.digs.len(),
 					m1, m2, m3, l1);
 		}
+		, p1, p2, p3 )
+
+		// TODO: digit of p1 below m3 is always {0,1,2,3} ?
 	}
 
 	/// numbers are special if the length is even and one of the middle digits is 0
@@ -254,7 +368,7 @@ fn main() {
 				.expect("Please provide positive number to decompose into palindromes");
 	let digits = Number::from(num, BASE);
     println!("{:?}", digits);
-    println!("Type: {:?}, special?: {}", digits.classify(), digits.is_special());
+    println!("Type: {:?}, special?: {}", digits.classify().0, digits.is_special());
 }
 
 #[test]
@@ -262,7 +376,7 @@ fn test_classify_cover() {
 	const X : u128 = 1_000_000;
 	for n in 0 .. 100*X {
 		let digits = Number::from(n, BASE);
-		let covers = digits.classify();
+		let covers = digits.classify().0;
 		if n < X { assert!(covers == Class::Small, "not Small: {} ", digits.as_u128()); }
 		if n % X == 0 {
 			println!(".");
