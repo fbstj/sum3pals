@@ -13,8 +13,8 @@ struct Digits {
 	base: Digit,
 }
 
-/// classification of digits
-#[derive(Debug)]
+/// classification of numbers from Section 2.1 & 2.2
+#[derive(Debug, PartialOrd, Ord, PartialEq, Eq)]
 enum Class {
 	/// numbers with <7 digits
 	Small,
@@ -116,6 +116,15 @@ impl Digits {
 		self.digs[nth - 1]
 	}
 
+	fn as_u128(&self) -> u128 {
+		let g = self.base as u128;
+		self.digs
+			.iter()
+			.enumerate()
+			.map(|(n, dig)| *dig as u128 * g.pow(n as u32) )
+			.sum()
+	}
+
 	fn classify(&self) -> Class {
 		if self.digs.len() < 7 {
 			return Class::Small;
@@ -172,7 +181,9 @@ impl Digits {
 		if m1 == 1 && (m2 == 1 || m2 == 2) && m3 == 3 && l1 == 3 {
 			Class::TypeB7
 		} else {
-			panic!("unclassified number");
+			panic!("unclassified number {} (len: {}, m1: {}, m2: {}, m3: {}, l1: {})",
+					self.as_u128(), self.digs.len(),
+					m1, m2, m3, l1);
 		}
 	}
 }
@@ -185,4 +196,17 @@ fn main() {
 	let digits = Digits::from(num, BASE);
     println!("{:?}", digits);
     println!("{:?}", digits.classify());
+}
+
+#[test]
+fn test_classify_cover() {
+	const X : u128 = 1_000_000;
+	for n in 0 .. 100*X {
+		let digits = Digits::from(n, BASE);
+		let covers = digits.classify();
+		if n < X { assert!(covers == Class::Small, "not Small: {} ", digits.as_u128()); }
+		if n % X == 0 {
+			println!(".");
+		}
+	}
 }
