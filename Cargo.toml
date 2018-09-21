@@ -1,0 +1,6 @@
+[package]
+name = "sum3pals"
+version = "0.1.0"
+authors = ["Joe ST <joe@fbstj.net>"]
+
+[dependencies]
