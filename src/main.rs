@@ -105,11 +105,75 @@ impl Digits {
 		Digits { digs: digits, base }
 	}
 
+	/// fetch the nth most significant digit
+	fn most_sig(&self, nth: usize) -> Digit {
+		assert!(self.digs.len() > nth, "out of range");
+		self.digs[self.digs.len() - nth]
+	}
+	/// fetch the nth least significant digit
+	fn least_sig(&self, nth: usize) -> Digit {
+		assert!(self.digs.len() > nth, "out of range");
+		self.digs[nth - 1]
+	}
+
 	fn classify(&self) -> Class {
 		if self.digs.len() < 7 {
 			return Class::Small;
 		}
-		unimplemented!();
+		// most significant 3 digits
+		let m1 = self.most_sig(1);
+		let m2 = self.most_sig(2);
+		let m3 = self.most_sig(3);
+		// least significant digit
+		let l1 = self.least_sig(1);
+		// D() calculations
+		let g = self.base as isize;
+		let d_l1_m1_m2_1 = ((l1 as isize) - (m1 as isize) - (m2 as isize) + 1) % g;
+		let d_l1_m1_2 = ((l1 as isize) - (m1 as isize) + 2) % g;
+		let d_l1_m3 = ((l1 as isize) - (m3 as isize)) % g;
+		let d_l1_3 = ((l1 as isize)- 3) % g;
+		// type A numbers
+		if !(m2 == 0 || m2 == 1 || m2 == 2) && d_l1_m1_m2_1 != 0 {
+			Class::TypeA1
+		} else
+		if !(m2 == 0 || m2 == 1 || m2 == 2) && d_l1_m1_m2_1 == 0 {
+			Class::TypeA2
+		} else
+		if (m2 == 0 || m2 == 1 || m2 == 2) && m1 != 1 && d_l1_m1_2 != 0 {
+			Class::TypeA3
+		} else
+		if (m2 == 0 || m2 == 1 || m2 == 2) && m1 != 1 && d_l1_m1_2 == 0 {
+			Class::TypeA4
+		} else
+		if m1 == 1 && m2 == 0 && m3 <= 3 && d_l1_m3 != 0 {
+			Class::TypeA5
+		} else
+		if m1 == 1 && m2 == 0 && m3 <= 2 && d_l1_m3 == 0 {
+			Class::TypeA6
+		} else
+		if m1 == 1 && m2 <= 2 && m3 >= 4 && d_l1_m3 != 0 {
+			Class::TypeB1
+		} else
+		if m1 == 1 && m2 <= 2 && m3 >= 3 && d_l1_m3 == 0 {
+			Class::TypeB2
+		} else
+		if m1 == 1 && (m2 == 1 || m2 == 2) && (m3 == 0 && m3 == 1) && l1 == 0 {
+			Class::TypeB3
+		} else
+		if m1 == 1 && (m2 == 1 || m2 == 2) && (m3 == 2 && m3 == 3) && l1 == 0 {
+			Class::TypeB4
+		} else
+		if m1 == 1 && (m2 == 1 || m2 == 2) && (m3 == 0 && m3 == 1 && m3 == 2) && l1 != 0 {
+			Class::TypeB5
+		} else
+		if m1 == 1 && (m2 == 1 || m2 == 2) && m3 == 3 && d_l1_3 != 0 {
+			Class::TypeB6
+		} else
+		if m1 == 1 && (m2 == 1 || m2 == 2) && m3 == 3 && l1 == 3 {
+			Class::TypeB7
+		} else {
+			panic!("unclassified number");
+		}
 	}
 }
 
@@ -117,7 +181,7 @@ fn main() {
 	let arg = std::env::args().nth(1)
 				.expect("Please provide number to decompose into palindromes");
 	let num : u128 = arg.parse()
-				.expect("Please provide number to decompose into palindromes");
+				.expect("Please provide positive number to decompose into palindromes");
 	let digits = Digits::from(num, BASE);
     println!("{:?}", digits);
     println!("{:?}", digits.classify());
