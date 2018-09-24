@@ -4,7 +4,7 @@
 // TODO: allow customisation on args --base
 const BASE: u8 = 10;
 
-// storage type for each digit (must fit BASE)
+/// storage type for each digit (must fit BASE)
 type Digit = u8;
 
 /// classification of numbers from Section 2.1 & 2.2
@@ -84,6 +84,7 @@ enum Class {
 	TypeB7,
 }
 
+
 #[derive(Debug)]
 struct Number {
 	digs: Vec<Digit>,
@@ -126,6 +127,15 @@ impl Number {
 			.sum()
 	}
 
+	/// make @value into a valid digit
+	fn big_dee(&self, values: &[Digit]) -> Digit {
+		let mut value = values[0] as isize;
+		for v in values[1..].iter() { value -= *v as isize; }
+		let g = self.base as isize;
+		while value < 0 { value += g; }
+		(value % g) as Digit
+	}
+
 	fn classify(&self) -> (Class, impl Palindrome, impl Palindrome, impl Palindrome) {
 		let len = self.digs.len();
 		if len < 7 {
@@ -138,11 +148,10 @@ impl Number {
 		// least significant digit
 		let l1 = self.least_sig(1);
 		// D() calculations
-		let g = self.base as isize;
-		let d_l1_m1_m2_1 = ((l1 as isize) - (m1 as isize) - (m2 as isize) + 1) % g;
-		let d_l1_m1_2 = ((l1 as isize) - (m1 as isize) + 2) % g;
-		let d_l1_m3 = ((l1 as isize) - (m3 as isize)) % g;
-		let d_l1_3 = ((l1 as isize)- 3) % g;
+		let d_l1_m1_m2_1 = self.big_dee(&[l1, m1, m2, -1isize as Digit]);
+		let d_l1_m1_2 = self.big_dee(&[l1, m1, -2isize as Digit]);
+		let d_l1_m3 = self.big_dee(&[l1, m3]);
+		let d_l1_3 = self.big_dee(&[l1, 3]);
 		// three palindromes
 		let mut p1 = Pal::new(len, self.base);
 		let mut p2 = Pal::new(len, self.base);
