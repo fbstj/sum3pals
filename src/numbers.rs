@@ -19,7 +19,6 @@ impl Number {
 		}
 
 		digits.push(num as u8);
-		digits.reverse();
 
 		Number { digs: digits, base }
 	}
