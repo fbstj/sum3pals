@@ -119,7 +119,7 @@ impl Number {
 			p3.set_digit(1, 1);
 			Class::TypeB2
 		} else
-		if m1 == 1 && (m2 == 1 || m2 == 2) && (m3 == 0 && m3 == 1) && l1 == 0 {
+		if m1 == 1 && (m2 == 1 || m2 == 2) && (m3 == 0 || m3 == 1) && l1 == 0 {
 			p1.set_digit(1, 1);
 			p1.set_digit(2, m2 - 1);
 			p2.drop_digit();
@@ -131,7 +131,7 @@ impl Number {
 			p3.set_digit(1, 1);
 			Class::TypeB3
 		} else
-		if m1 == 1 && (m2 == 1 || m2 == 2) && (m3 == 2 && m3 == 3) && l1 == 0 {
+		if m1 == 1 && (m2 == 1 || m2 == 2) && (m3 == 2 || m3 == 3) && l1 == 0 {
 			p1.set_digit(1, 1);
 			p1.set_digit(2, m2);
 			p2.drop_digit();
@@ -143,7 +143,7 @@ impl Number {
 			p3.set_digit(1, self.base - 2);
 			Class::TypeB4
 		} else
-		if m1 == 1 && (m2 == 1 || m2 == 2) && (m3 == 0 && m3 == 1 && m3 == 2) && l1 != 0 {
+		if m1 == 1 && (m2 == 1 || m2 == 2) && (m3 == 0 || m3 == 1 || m3 == 2) && l1 != 0 {
 			p1.set_digit(1, 1);
 			p1.set_digit(2, m2 - 1);
 			p2.drop_digit();
@@ -196,19 +196,69 @@ fn main() {
 	let num : u128 = arg.parse()
 				.expect("Please provide positive number to decompose into palindromes");
 	let digits = Number::from(num, BASE);
-    println!("{:?}", digits);
-    println!("Type: {:?}, special?: {}", digits.classify().0, digits.is_special());
+		println!("{:?}", digits);
+		println!("Type: {:?}, special?: {}", digits.classify().0, digits.is_special());
 }
 
-#[test]
-fn test_classify_cover() {
-	const X : u128 = 1_000_000;
-	for n in 0 .. 100*X {
-		let digits = Number::from(n, BASE);
+#[cfg(test)]
+mod tests{
+	use numbers::Number;
+	use classes::Class;
+	use digit::BASE;
+	const SMALL_NUMS : u128 = 1_000_000;
+	#[test]
+	fn classify_1234567() {
+		let value = 1234567;
+		let digits = Number::from(value, BASE);
 		let covers = digits.classify().0;
-		if n < X { assert!(covers == Class::Small, "not Small: {} ", digits.as_u128()); }
-		if n % X == 0 {
-			println!(".");
+		assert_eq!(covers, Class::TypeB6);
+	}
+	#[test]
+	fn check_special() {
+		let digits = Number::from(12300456, BASE);
+		assert!(digits.is_special());
+		let covers = digits.classify().0;
+		assert_eq!(covers, Class::TypeB6);
+
+		let digits = Number::from(45671230812390, BASE);
+		assert!(digits.is_special());
+		let covers = digits.classify().0;
+		assert_eq!(covers, Class::TypeA1);
+
+		let digits = Number::from(42471202812393, BASE);
+		assert!(digits.is_special());
+		let covers = digits.classify().0;
+		assert_eq!(covers, Class::TypeA3);
+
+		let digits = Number::from(42471252812393, BASE);
+		assert!(!digits.is_special());
+		let covers = digits.classify().0;
+		assert_eq!(covers, Class::TypeA3);
+	}
+	#[test]
+	fn classify_cover_small() {
+		for n in 0 .. SMALL_NUMS {
+			let digits = Number::from(n, BASE);
+			let covers = digits.classify().0;
+			assert_eq!(covers, Class::Small);
+		}
+	}
+	#[test]
+	fn classify_cover_x5() {
+		let x = 5 * SMALL_NUMS;
+		for n in x .. x + SMALL_NUMS {
+			let digits = Number::from(n, BASE);
+			let _covers = digits.classify().0;
+		}
+	}
+	#[test]
+	fn classify_cover_x420_sparse() {
+		for n in SMALL_NUMS .. 2 * SMALL_NUMS {
+			let digits = Number::from(n * 420, BASE);
+			let _covers = digits.classify().0;
+			if n % SMALL_NUMS == 0 {
+				println!(".");
+			}
 		}
 	}
 }
